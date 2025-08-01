@@ -47,35 +47,29 @@ def solar_energy(lat, tilt, season_angle_deg):
 def draw_precession_cycle(years):
     fig, ax = plt.subplots(figsize=(7, 7))
 
-    # ===== 타원형 궤도 =====
     a = 3
     b = 2.4
     e = np.sqrt(1 - (b**2 / a**2))
     c = a * e
 
-    # 타원 궤도
     orbit_theta = np.linspace(0, 2*np.pi, 300)
     x_orbit = a * np.cos(orbit_theta)
     y_orbit = b * np.sin(orbit_theta)
     ax.plot(x_orbit, y_orbit, color='lightgray', linewidth=1.5)
 
-    # ===== 태양 위치 (중심과 초점의 중간) =====
     sun_x, sun_y = (c / 2), 0
     ax.plot(sun_x, sun_y, 'o', color='orange', markersize=18, label='Sun')
 
-    # ===== 근일점 / 원일점 =====
     perihelion_pos = (a, 0)
     aphelion_pos = (-a, 0)
 
-    # 라벨 (태양 기준으로 근일점/원일점 위치 조정)
-    offset_text = 0.6  # 알파벳 약 3자 정도 거리
+    # 라벨 (태양 기준으로 약간 떨어짐)
+    offset_text = 0.4
     ax.text((c / 2) + offset_text, 0.0, "Perihelion", fontsize=10, fontweight='bold', ha='left')
     ax.text(-a - offset_text, 0.0, "Aphelion", fontsize=10, fontweight='bold', ha='right')
 
-    # ===== 계절 반전 여부 (23000년 기준) =====
     reverse_season = (years == 23000)
 
-    # ===== 지구 그리는 함수 =====
     def draw_earth_with_axis(pos, is_aphelion):
         earth = plt.Circle(pos, 0.25, color='skyblue', zorder=3)
         ax.add_artist(earth)
@@ -91,7 +85,6 @@ def draw_precession_cycle(years):
                 [pos[1] - axis_y, pos[1] + axis_y],
                 color='navy', linewidth=2.5)
 
-        # 계절 라벨 (궤도 밖, 지구 가까이)
         offset = 0.4
         if is_aphelion:
             season = "Summer" if not reverse_season else "Winter"
@@ -101,11 +94,9 @@ def draw_precession_cycle(years):
         ax.text(pos[0], pos[1] + 0.25 + offset, season,
                 ha='center', fontsize=10, fontweight='bold')
 
-    # 지구 배치
     draw_earth_with_axis(perihelion_pos, is_aphelion=False)
     draw_earth_with_axis(aphelion_pos, is_aphelion=True)
 
-    # 화면 설정
     ax.set_aspect('equal')
     ax.set_xlim(-4, 4)
     ax.set_ylim(-3, 3)
@@ -124,10 +115,15 @@ main_menu = st.sidebar.radio("Select Category", ["Main", "External Factors", "In
 # =========================================
 if main_menu == "Main":
     st.title("🌍 Earth Climate Change Factors")
-    st.markdown("""
-    Earth's climate changes are influenced by **external** and **internal** factors.  
+    st.markdown(
+    """
+    <div style='font-size: 20px;'>
+    Earth's climate changes are influenced by <b>external</b> and <b>internal</b> factors.<br>
     Use the menu on the left to explore different influences.
-    """)
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # =========================================
 # External Factors
@@ -138,26 +134,30 @@ elif main_menu == "External Factors":
     # ---- Precession ----
     if ext_menu == "Precession":
         st.title("Earth's Precession (세차운동)")
-        st.markdown("""
-        Earth's precession is the slow rotation of the direction of Earth's axis  
-        over a cycle of about **26,000 years**.
+        st.markdown(
+            """
+            <div style='font-size: 20px;'>
+            Earth's precession is the slow rotation of the direction of Earth's axis  
+            over a cycle of about <b>26,000 years</b>.<br><br>
+            In this simulation:
+            <ul>
+                <li>The orbit is drawn <b>elliptical</b> so perihelion and aphelion are obvious.</li>
+                <li>The Sun is placed <b>between the center and the focus near perihelion</b>.</li>
+                <li>At <b>23,000 years</b>, the axial tilt direction flips (<i>y-axis symmetry</i>), reversing seasons relative to perihelion/aphelion.</li>
+            </ul>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-        In this simulation:
-        - The orbit is drawn **elliptical** so perihelion and aphelion are obvious.
-        - The Sun is placed **between the center and the focus near perihelion**.
-        - At **23,000 years**, the axial tilt direction flips (y-axis symmetry), reversing seasons relative to perihelion/aphelion.
-        """)
-
-        # 0, 23000, 46000에서만 선택 가능
         years = st.select_slider(
             "Precession Cycle Position (years)",
             options=[0, 23000, 46000],
             value=0
         )
 
-        # 눈금 마크 (0, 23000, 46000 - 가로줄과 정렬)
         st.markdown(
-            f"""
+            """
             <div style="display: flex; justify-content: space-between; font-size: 12px; color: gray; margin-top:-10px;">
                 <span>0</span>
                 <span style="color:red; font-weight:bold;">23,000 ▼</span>
@@ -173,6 +173,23 @@ elif main_menu == "External Factors":
     # ---- Axial Tilt Change ----
     elif ext_menu == "Axial Tilt Change":
         st.title("Axial Tilt Change Simulation")
+        st.markdown(
+            """
+            <div style='font-size: 20px;'>
+            The <b>axial tilt</b> (obliquity) of the Earth is the angle between the Earth's rotational axis  
+            and its orbital plane. This tilt changes over a cycle of about <b>41,000 years</b>,  
+            ranging roughly from <b>21.5° to 24.5°</b>.<br><br>
+            These changes affect the <b>intensity of the seasons</b>:
+            <ul>
+                <li><b>Greater tilt</b> → Hotter summers and colder winters</li>
+                <li><b>Smaller tilt</b> → Milder seasons</li>
+            </ul>
+            Adjust the slider to see how different tilt angles change the seasonal solar energy at 37°N.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
         angle = st.slider("Axial Tilt (°)", 21.5, 24.5, 23.5, 0.1)
 
         fig1 = draw_earth(angle)
