@@ -21,13 +21,11 @@ def draw_earth(axial_tilt_deg):
 
     ax.arrow(1.4, 0.0, -0.6, 0, head_width=0.06, head_length=0.1,
              fc='orange', ec='orange', linewidth=2)
-    ax.text(1.55, 0.0, "☀️ Sunlight", color='orange', fontsize=12, va='center')
 
     ax.set_xlim(-1.6, 1.6)
     ax.set_ylim(-1.6, 1.6)
     ax.set_aspect('equal')
     ax.axis('off')
-    ax.legend(loc='lower right')
     return fig
 
 # =========================================
@@ -58,12 +56,11 @@ def draw_precession_cycle(years):
     ax.plot(x_orbit, y_orbit, color='lightgray', linewidth=1.5)
 
     sun_x, sun_y = (c / 2), 0
-    ax.plot(sun_x, sun_y, 'o', color='orange', markersize=18, label='Sun')
+    ax.plot(sun_x, sun_y, 'o', color='orange', markersize=18)
 
     perihelion_pos = (a, 0)
     aphelion_pos = (-a, 0)
 
-    # 라벨 (태양 기준으로 약간 떨어짐)
     offset_text = 0.4
     ax.text((c / 2) + offset_text, 0.0, "Perihelion", fontsize=10, fontweight='bold', ha='left')
     ax.text(-a - offset_text, 0.0, "Aphelion", fontsize=10, fontweight='bold', ha='right')
@@ -101,8 +98,47 @@ def draw_precession_cycle(years):
     ax.set_xlim(-4, 4)
     ax.set_ylim(-3, 3)
     ax.axis('off')
-    ax.legend(loc='upper left')
     return fig
+
+# =========================================
+# 이심률 변화 시뮬레이션 함수 (시각 과장 적용)
+# =========================================
+def draw_orbit_with_eccentricity(ecc):
+    fig, ax = plt.subplots(figsize=(7, 7))
+
+    a = 3
+    e_vis = min(ecc * 1.5, 0.99)  # 시각적 과장
+    b = a * np.sqrt(1 - e_vis**2)
+    c = a * ecc  # 실제 초점 거리
+
+    theta = np.linspace(0, 2*np.pi, 300)
+    x_orbit = a * np.cos(theta)
+    y_orbit = b * np.sin(theta)
+    ax.plot(x_orbit, y_orbit, color='lightgray', linewidth=1.5)
+
+    ax.plot(c, 0, 'o', color='orange', markersize=18)
+
+    ax.plot(a, 0, 'o', color='skyblue', markersize=10)
+    ax.plot(-a, 0, 'o', color='skyblue', markersize=10)
+
+    ax.text(a * 0.8, 0.0, "Perihelion", fontsize=10, fontweight='bold', ha='center')
+    ax.text(-a * 0.8, 0.0, "Aphelion", fontsize=10, fontweight='bold', ha='center')
+
+    ax.set_aspect('equal')
+    ax.set_xlim(-4, 4)
+    ax.set_ylim(-3, 3)
+    ax.axis('off')
+    return fig
+
+def calculate_solar_energy_at_points(ecc):
+    a = 1
+    r_peri = a * (1 - ecc)
+    r_aphe = a * (1 + ecc)
+    energy_peri = 1 / (r_peri**2)
+    energy_aphe = 1 / (r_aphe**2)
+    energy_peri_norm = 100
+    energy_aphe_norm = energy_aphe / energy_peri * 100
+    return energy_peri_norm, energy_aphe_norm
 
 # =========================================
 # Sidebar Navigation
@@ -116,14 +152,14 @@ main_menu = st.sidebar.radio("Select Category", ["Main", "External Factors", "In
 if main_menu == "Main":
     st.title("🌍 Earth Climate Change Factors")
     st.markdown(
-    """
-    <div style='font-size: 20px;'>
-    Earth's climate changes are influenced by <b>external</b> and <b>internal</b> factors.<br>
-    Use the menu on the left to explore different influences.
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+        """
+        <div style='font-size: 20px;'>
+        Earth's climate changes are influenced by <b>external</b> and <b>internal</b> factors.<br>
+        Use the menu on the left to explore different influences.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 # =========================================
 # External Factors
@@ -138,23 +174,13 @@ elif main_menu == "External Factors":
             """
             <div style='font-size: 20px;'>
             Earth's precession is the slow rotation of the direction of Earth's axis  
-            over a cycle of about <b>26,000 years</b>.<br><br>
-            In this simulation:
-            <ul>
-                <li>The orbit is drawn <b>elliptical</b> so perihelion and aphelion are obvious.</li>
-                <li>The Sun is placed <b>between the center and the focus near perihelion</b>.</li>
-                <li>At <b>23,000 years</b>, the axial tilt direction flips (<i>y-axis symmetry</i>), reversing seasons relative to perihelion/aphelion.</li>
-            </ul>
+            over a cycle of about <b>26,000 years</b>.
             </div>
             """,
             unsafe_allow_html=True
         )
 
-        years = st.select_slider(
-            "Precession Cycle Position (years)",
-            options=[0, 23000, 46000],
-            value=0
-        )
+        years = st.select_slider("Precession Cycle Position (years)", options=[0, 23000, 46000], value=0)
 
         st.markdown(
             """
@@ -176,15 +202,9 @@ elif main_menu == "External Factors":
         st.markdown(
             """
             <div style='font-size: 20px;'>
-            The <b>axial tilt</b> (obliquity) of the Earth is the angle between the Earth's rotational axis  
-            and its orbital plane. This tilt changes over a cycle of about <b>41,000 years</b>,  
-            ranging roughly from <b>21.5° to 24.5°</b>.<br><br>
-            These changes affect the <b>intensity of the seasons</b>:
-            <ul>
-                <li><b>Greater tilt</b> → Hotter summers and colder winters</li>
-                <li><b>Smaller tilt</b> → Milder seasons</li>
-            </ul>
-            Adjust the slider to see how different tilt angles change the seasonal solar energy at 37°N.
+            The axial tilt of the Earth changes over a cycle of about <b>41,000 years</b>,  
+            ranging roughly from <b>21.5° to 24.5°</b>.  
+            This affects the <b>intensity of the seasons</b>.
             </div>
             """,
             unsafe_allow_html=True
@@ -204,8 +224,7 @@ elif main_menu == "External Factors":
         bars = ax2.bar(seasons.keys(), energies, color=['#FFD700', '#FF8C00', '#87CEEB', '#1E90FF'])
 
         for bar, val in zip(bars, energies):
-            ax2.text(bar.get_x() + bar.get_width()/2, val / 2, f"{val}%",
-                     ha='center', va='center', fontsize=9, color='white', fontweight='bold')
+            ax2.text(bar.get_x() + bar.get_width()/2, val / 2, f"{val}%", ha='center', va='center', fontsize=9, color='white', fontweight='bold')
 
         ax2.set_ylabel("Relative Solar Energy (%)")
         ax2.set_ylim(0, 100)
@@ -214,8 +233,32 @@ elif main_menu == "External Factors":
 
     # ---- Orbital Eccentricity Change ----
     elif ext_menu == "Orbital Eccentricity Change":
-        st.title("Orbital Eccentricity Change")
-        st.write("Information and simulation about Earth's orbital eccentricity changes will be here.")
+        st.title("Orbital Eccentricity Change Simulation")
+        st.markdown(
+            """
+            <div style='font-size: 20px;'>
+            The Earth's orbital eccentricity changes over time,  
+            altering the distance between the Earth and Sun at perihelion and aphelion.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        ecc = st.slider("Orbital Eccentricity", 0.0, 0.2, 0.0167, step=0.005)
+
+        fig_orbit = draw_orbit_with_eccentricity(ecc)
+        st.pyplot(fig_orbit)
+
+        peri_energy, aphe_energy = calculate_solar_energy_at_points(ecc)
+
+        st.subheader("Relative Solar Energy (%)")
+        fig3, ax3 = plt.subplots(figsize=(5.5, 3))
+        bars = ax3.bar(["Perihelion", "Aphelion"], [peri_energy, aphe_energy], color=['#FF8C00', '#1E90FF'])
+        for bar, val in zip(bars, [peri_energy, aphe_energy]):
+            ax3.text(bar.get_x() + bar.get_width()/2, val / 2, f"{val:.1f}%", ha='center', va='center', fontsize=9, color='white', fontweight='bold')
+
+        ax3.set_ylim(0, 110)
+        st.pyplot(fig3)
 
 # =========================================
 # Internal Factors
