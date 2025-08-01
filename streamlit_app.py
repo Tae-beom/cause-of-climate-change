@@ -1,91 +1,106 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-from matplotlib import rc
 import numpy as np
 
-# ▶ 한글 폰트 설정
-rc('font', family='NanumGothic')
+# -------------------------------
+# App Title
+# -------------------------------
+st.title("Earth's Axial Tilt & Seasonal Solar Energy")
 
-# 앱 제목
-st.title("🌏 지구 자전축과 계절 변화 시뮬레이션")
+st.markdown(
+    "Use the slider to adjust Earth's axial tilt. "
+    "The tilt affects the axis and equator orientation, but **Sunlight** stays fixed along the horizontal diameter."
+)
 
 # -------------------------------
-# 1️⃣ 지구 자전축 시각화
+# Slider for Axial Tilt
 # -------------------------------
-st.subheader("1. 지구 자전축 시각화")
+angle = st.slider("Axial Tilt (degrees)", min_value=21.5, max_value=24.5, value=23.5, step=0.1)
 
-# 그래프 그리기
-fig1, ax1 = plt.subplots(figsize=(6, 6))
+# -------------------------------
+# Function to Draw Earth Diagram
+# -------------------------------
+def draw_earth(axial_tilt_deg):
+    fig, ax = plt.subplots(figsize=(6, 6))
 
-# 지구 원 (반지름 = 1)
-earth = plt.Circle((0, 0), 1, color='lightblue', zorder=1)
-ax1.add_artist(earth)
+    # Draw Earth as a circle
+    earth = plt.Circle((0, 0), 1, color='skyblue', zorder=1)
+    ax.add_artist(earth)
 
-# ▶ 자전축 경사각 설정
-# 기본값은 아래에서 받음
-default_angle = 23.5
+    # Axial tilt line
+    theta = np.deg2rad(axial_tilt_deg)
+    x1 = np.sin(theta) * 1.3
+    y1 = np.cos(theta) * 1.3
+    ax.plot([-x1, x1], [-y1, y1], color='navy', linewidth=3, label='Axial Tilt')
 
-# 자전축 선 (위아래로 연장, 총 길이 3)
-radians = np.deg2rad(default_angle)
-x = np.sin(radians) * 1.5
-y = np.cos(radians) * 1.5
-ax1.plot([-x, x], [-y, y], color='darkblue', linewidth=3, label='자전축')
+    # Equator line (90° to axial tilt)
+    ex = np.cos(theta)
+    ey = -np.sin(theta)
+    ax.plot([-ex, ex], [-ey, ey], color='white', linewidth=2, linestyle='--', label='Equator')
 
-# ▶ 적도선: 자전축과 항상 90도 되도록 회전된 직선
-# 적도선은 자전축에 수직, 즉 (cos, -sin) 방향으로 회전
-ex = np.cos(radians)
-ey = -np.sin(radians)
-ax1.plot([-ex, ex], [-ey, ey], color='white', linewidth=2, linestyle='--', label='적도')
+    # Sunlight arrow - FIXED position (horizontal diameter extension)
+    ax.arrow(1.4, 0.0, -0.6, 0, head_width=0.06, head_length=0.1,
+             fc='orange', ec='orange', linewidth=2)
+    ax.text(1.55, 0.0, "☀️ Sunlight", color='orange', fontsize=12, va='center')
 
-# ▶ 태양광 화살표: 지구를 관통하지 않도록 짧게 그림
-arrow_length = 0.8  # 관통 방지용 길이
-ax1.arrow(1.6, 0.5, -arrow_length, 0, head_width=0.08, head_length=0.1,
-          fc='orange', ec='orange', linewidth=2, zorder=2)
-ax1.text(1.7, 0.5, "☀️ 태양광", fontsize=12, color='orange', va='bottom')
+    # Plot settings
+    ax.set_xlim(-1.6, 1.6)
+    ax.set_ylim(-1.6, 1.6)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    ax.legend(loc='lower right')
 
-# 설정
-ax1.set_aspect('equal')
-ax1.set_xlim(-2, 2)
-ax1.set_ylim(-2, 2)
-ax1.axis('off')
-ax1.legend()
+    return fig
 
-# ▶ 그림 먼저 출력
+# -------------------------------
+# Show Earth Diagram
+# -------------------------------
+fig1 = draw_earth(angle)
 st.pyplot(fig1)
 
-# ▶ 경사각 슬라이더를 아래쪽에 위치
-angle = st.slider("지구 자전축 경사각 조절 (°)", min_value=21.5, max_value=24.5, value=23.5, step=0.1)
+# -------------------------------
+# Seasonal Solar Energy Chart
+# -------------------------------
+st.subheader("Seasonal Solar Energy at 37°N (Noon)")
 
-# ▶ 슬라이더 변경을 반영해서 다시 그림
-fig1, ax1 = plt.subplots(figsize=(6, 6))
+# Season definitions (Sun's ecliptic longitude)
+seasons = {
+    "Spring (Mar)": 0,
+    "Summer (Jun)": 90,
+    "Autumn (Sep)": 180,
+    "Winter (Dec)": 270
+}
 
-# 지구 원
-earth = plt.Circle((0, 0), 1, color='lightblue', zorder=1)
-ax1.add_artist(earth)
+# Declination calculation
+def declination(season_angle_deg, tilt_deg):
+    return tilt_deg * np.sin(np.deg2rad(season_angle_deg))
 
-# 자전축 선
-radians = np.deg2rad(angle)
-x = np.sin(radians) * 1.5
-y = np.cos(radians) * 1.5
-ax1.plot([-x, x], [-y, y], color='darkblue', linewidth=3, label='자전축')
+# Solar energy calculation (relative %)
+def solar_energy(lat, tilt, season_angle_deg):
+    delta = declination(season_angle_deg, tilt)
+    solar_alt = 90 - abs(lat - delta)
+    return round(np.maximum(np.sin(np.deg2rad(solar_alt)), 0) * 100, 1)
 
-# 적도: 자전축에 직각 방향으로 회전
-ex = np.cos(radians)
-ey = -np.sin(radians)
-ax1.plot([-ex, ex], [-ey, ey], color='white', linewidth=2, linestyle='--', label='적도')
+latitude = 37
+energies = [solar_energy(latitude, angle, seasons[s]) for s in seasons]
 
-# 태양광 (지구 외부에서 관통하지 않도록 길이 조절)
-arrow_length = 0.8
-ax1.arrow(1.6, 0.5, -arrow_length, 0, head_width=0.08, head_length=0.1,
-          fc='orange', ec='orange', linewidth=2, zorder=2)
-ax1.text(1.7, 0.5, "☀️ 태양광", fontsize=12, color='orange', va='bottom')
+# Small bar chart
+fig2, ax2 = plt.subplots(figsize=(5.5, 3))
+bars = ax2.bar(seasons.keys(), energies, color=['#FFD700', '#FF8C00', '#87CEEB', '#1E90FF'])
 
-# 설정
-ax1.set_aspect('equal')
-ax1.set_xlim(-2, 2)
-ax1.set_ylim(-2, 2)
-ax1.axis('off')
-ax1.legend()
-st.pyplot(fig1)
-
+# Label bars
+for bar, val in zip(bars, energies):
+    ax2.text(
+        bar.get_x() + bar.get_width()/2,
+        val / 2,  # 막대 중간쯤에 위치
+        f"{val}%",
+        ha='center',
+        va='center',
+        fontsize=9,
+        color='white',  # 막대 내부에 잘 보이도록
+        fontweight='bold'
+    )
+ax2.set_ylabel("Relative Solar Energy (%)")
+ax2.set_ylim(0, 100)
+ax2.set_title("Noon Solar Energy by Season")
+st.pyplot(fig2)
