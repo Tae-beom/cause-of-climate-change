@@ -47,7 +47,6 @@ def solar_energy(lat, tilt, season_angle_deg):
 # =========================================
 def draw_precession_cycle(years):
     fig, ax = plt.subplots(figsize=(7, 7))
-
     a = 3
     b = 2.4
     e = np.sqrt(1 - (b**2 / a**2))
@@ -57,13 +56,13 @@ def draw_precession_cycle(years):
     ax.plot(a * np.cos(orbit_theta), b * np.sin(orbit_theta), color='lightgray', linewidth=1.5)
 
     sun_x, sun_y = (c / 2), 0
-    ax.plot(sun_x, sun_y, 'o', color='orange', markersize=18)
+    ax.plot(sun_x, sun_y, 'o', color='orange', markersize=20)
 
     perihelion_pos = (a, 0)
     aphelion_pos = (-a, 0)
 
-    ax.text((c / 2) + 0.4, 0.0, "Perihelion", fontsize=10, fontweight='bold', ha='left')
-    ax.text(-a - 0.4, 0.0, "Aphelion", fontsize=10, fontweight='bold', ha='right')
+    ax.text((c / 2) + 0.6, -0.1, "Perihelion", fontsize=10, fontweight='bold', ha='left')
+    ax.text(-a + 1.3, -0.1, "Aphelion", fontsize=10, fontweight='bold', ha='right')
 
     reverse_season = (years == 13000)
 
@@ -105,17 +104,23 @@ def draw_orbit_with_eccentricity(ecc):
     ax.plot(a * np.cos(theta), b * np.sin(theta), color='lightgray', linewidth=1.5)
 
     ax.plot(c, 0, 'o', color='orange', markersize=18)
-    ax.plot(a, 0, 'o', color='skyblue', markersize=10)
-    ax.plot(-a, 0, 'o', color='skyblue', markersize=10)
+    ax.plot(a, 0, 'o', color='skyblue', markersize=12)
+    ax.plot(-a, 0, 'o', color='skyblue', markersize=12)
 
-    ax.text(a * 0.8, 0.0, "Perihelion", fontsize=10, fontweight='bold', ha='center')
-    ax.text(-a * 0.8, 0.0, "Aphelion", fontsize=10, fontweight='bold', ha='center')
+    ax.text(a * 0.75, -0.1, "Perihelion", fontsize=10, fontweight='bold', ha='center')
+    ax.text(-a * 0.75, -0.1, "Aphelion", fontsize=10, fontweight='bold', ha='center')
 
     ax.set_aspect('equal')
     ax.set_xlim(-4, 4)
     ax.set_ylim(-3, 3)
     ax.axis('off')
     return fig
+
+def calculate_solar_energy_at_points(ecc):
+    a = 1
+    r_peri = a * (1 - ecc)
+    r_aphe = a * (1 + ecc)
+    return 100, (1 / r_aphe**2) / (1 / r_peri**2) * 100
 
 # =========================================
 # 피나투보 화산 그래프
@@ -200,24 +205,82 @@ if main_menu == "Main":
 # =========================================
 elif main_menu == "External Factors":
     ext_menu = st.sidebar.radio("Select External Factor", ["Precession", "Axial Tilt Change", "Orbital Eccentricity Change"])
+    
     if ext_menu == "Precession":
         st.title("Earth's Precession (세차운동)")
+        st.markdown(
+            """
+            <div style='font-size: 20px;'>
+            Earth's precession is the slow wobble in the orientation of its rotational axis,  
+            completing one full cycle approximately every <b>26,000 years</b>.  
+            This changes the timing of the seasons relative to Earth's position in its orbit.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
         years = st.select_slider("Precession Cycle Position (years)", options=[0, 13000, 26000], value=0)
         st.pyplot(draw_precession_cycle(years))
+
     elif ext_menu == "Axial Tilt Change":
         st.title("Axial Tilt Change Simulation")
+        st.markdown(
+            """
+            <div style='font-size: 20px;'>
+            The tilt of Earth's axis changes slowly over a cycle of about <b>41,000 years</b>.  
+            This variation affects the intensity of the seasons.  
+            Higher tilt → more extreme seasons, lower tilt → milder seasons.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
         angle = st.slider("Axial Tilt (°)", 21.5, 24.5, 23.5, 0.1)
         st.pyplot(draw_earth(angle))
+
+        st.subheader("Seasonal Solar Energy at 37°N (Noon)")
+        seasons = {"Spring (Mar)": 0, "Summer (Jun)": 90, "Autumn (Sep)": 180, "Winter (Dec)": 270}
+        latitude = 37
+        energies = [solar_energy(latitude, angle, seasons[s]) for s in seasons]
+
+        fig2, ax2 = plt.subplots(figsize=(5.5, 3))
+        bars = ax2.bar(seasons.keys(), energies, color=['#FFD700', '#FF8C00', '#87CEEB', '#1E90FF'])
+        for bar, val in zip(bars, energies):
+            ax2.text(bar.get_x() + bar.get_width()/2, val / 2, f"{val}%", ha='center', va='center', fontsize=9, color='white', fontweight='bold')
+        ax2.set_ylabel("Relative Solar Energy (%)")
+        ax2.set_ylim(0, 100)
+        ax2.set_title("Noon Solar Energy by Season")
+        st.pyplot(fig2)
+
     elif ext_menu == "Orbital Eccentricity Change":
         st.title("Orbital Eccentricity Change Simulation")
+        st.markdown(
+            """
+            <div style='font-size: 20px;'>
+            Earth's orbit changes shape from more circular to more elliptical over  
+            cycles of about <b>100,000 years</b>.  
+            This changes the difference in distance from the Sun at perihelion and aphelion,  
+            affecting seasonal temperature contrasts.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
         ecc = st.slider("Orbital Eccentricity", 0.0, 0.2, 0.0167, step=0.005)
         st.pyplot(draw_orbit_with_eccentricity(ecc))
+
+        peri_energy, aphe_energy = calculate_solar_energy_at_points(ecc)
+        st.subheader("Relative Solar Energy (%)")
+        fig3, ax3 = plt.subplots(figsize=(5.5, 3))
+        bars = ax3.bar(["Perihelion", "Aphelion"], [peri_energy, aphe_energy], color=['#FF8C00', '#1E90FF'])
+        for bar, val in zip(bars, [peri_energy, aphe_energy]):
+            ax3.text(bar.get_x() + bar.get_width()/2, val / 2, f"{val:.1f}%", ha='center', va='center', fontsize=9, color='white', fontweight='bold')
+        ax3.set_ylim(0, 110)
+        st.pyplot(fig3)
 
 # =========================================
 # Internal Factors
 # =========================================
 elif main_menu == "Internal Factors":
     int_menu = st.sidebar.radio("Select Internal Factor", ["Natural Causes", "Human-Induced Causes"])
+    
     if int_menu == "Natural Causes":
         st.title("🌋 Natural Internal Causes")
         st.markdown(
@@ -243,7 +306,7 @@ elif main_menu == "Internal Factors":
             """,
             unsafe_allow_html=True
         )
-        uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
+        uploaded_file = st.file_uploader("Upload CSV File", type=["csv"], key="human_csv_uploader")
         if uploaded_file is not None:
             df = pd.read_csv(uploaded_file)
             fig, slope_decade = draw_temp_trend_chart(df)
