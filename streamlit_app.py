@@ -142,6 +142,46 @@ def calculate_solar_energy_at_points(ecc):
     return energy_peri_norm, energy_aphe_norm
 
 # =========================================
+# Mount Pinatubo Aerosol & Temperature Plot
+# =========================================
+def draw_pinatubo_aerosol_temp_chart():
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # 1) 데이터 정의 (실제 관측 기반 예시)
+    years = np.array([1990, 1991, 1992, 1993, 1994])
+    aerosol_mt = np.array([1, 17, 10, 5, 2])  # SO₂ 방출량 (메가톤)
+    temp_anomaly = np.array([0.0, -0.1, -0.5, -0.3, -0.1])  # 기온 편차 (°C)
+
+    # 2) 그래프 틀 생성
+    fig, ax1 = plt.subplots(figsize=(8,5))
+
+    # 3) 왼쪽 y축 - 에어로졸 방출량
+    color = 'tab:blue'
+    ax1.set_xlabel('Year')
+    ax1.set_ylabel('SO$_2$ Emission (Mt)', color=color)
+    ax1.plot(years, aerosol_mt, color=color, marker='o', label='SO$_2$ Emission')
+    ax1.tick_params(axis='y', labelcolor=color)
+
+    # 4) 오른쪽 y축 - 기온 편차
+    ax2 = ax1.twinx()
+    color = 'tab:red'
+    ax2.set_ylabel('Temperature Anomaly (°C)', color=color)
+    ax2.plot(years, temp_anomaly, color=color, marker='s', label='Temp Anomaly')
+    ax2.tick_params(axis='y', labelcolor=color)
+
+    # 5) 제목, 범례, 격자
+    fig.suptitle('Mount Pinatubo: Aerosol Emission vs. Temperature Anomaly', fontsize=14)
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
+    plt.grid(True, linestyle='--', alpha=0.5)
+
+    plt.tight_layout()
+    return fig
+
+
+# =========================================
 # Sidebar Navigation
 # =========================================
 st.sidebar.title("📌 Menu")
@@ -264,12 +304,30 @@ elif main_menu == "External Factors":
 # =========================================
 # Internal Factors
 # =========================================
+
 elif main_menu == "Internal Factors":
     int_menu = st.sidebar.radio("Select Internal Factor", ["Natural Causes", "Human-Induced Causes"], key="internal_factor_radio")
 
     if int_menu == "Natural Causes":
-        st.title("Natural Internal Causes")
-        st.write("Information about natural internal causes will be here.")
+        st.title("🌋 Natural Internal Causes")
+
+        st.markdown(
+            """
+            <div style='font-size: 20px;'>
+            Natural internal factors include volcanic eruptions that can significantly affect the climate.<br><br>
+            One major example is the <b>1991 Mount Pinatubo eruption</b>, which injected millions of tons of sulfur dioxide (SO₂)
+            into the stratosphere, reflecting sunlight and cooling the Earth's surface for several years.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.subheader("📈 Aerosol Emissions and Temperature Change After Pinatubo")
+
+        # 피나투보 에어로졸-기온 변화 그래프 표시
+        fig_pinatubo = draw_pinatubo_aerosol_temp_chart()
+        st.pyplot(fig_pinatubo)
+
 
     elif int_menu == "Human-Induced Causes":
         st.title("Human-Induced Internal Causes")
