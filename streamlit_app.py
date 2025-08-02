@@ -19,8 +19,9 @@ def draw_earth(axial_tilt_deg):
     ey = -np.sin(theta)
     ax.plot([-ex, ex], [-ey, ey], color='white', linewidth=2, linestyle='--', label='Equator')
 
-    ax.arrow(1.4, 0.0, -0.6, 0, head_width=0.06, head_length=0.1,
+    ax.arrow(1.8, 0.0, -0.6, 0, head_width=0.06, head_length=0.1,
              fc='orange', ec='orange', linewidth=2)
+    ax.text(1.65, 0.0, "☀️ Sunlight", color='orange', fontsize=12, va='center')
 
     ax.set_xlim(-1.6, 1.6)
     ax.set_ylim(-1.6, 1.6)
