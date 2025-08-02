@@ -207,7 +207,7 @@ elif main_menu == "External Factors":
     ext_menu = st.sidebar.radio("Select External Factor", ["Precession", "Axial Tilt Change", "Orbital Eccentricity Change"])
     
     if ext_menu == "Precession":
-        st.title("Earth's Precession (세차운동)")
+        st.title("Earth's Precession")
         st.markdown(
             """
             <div style='font-size: 20px;'>
