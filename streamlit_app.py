@@ -65,7 +65,7 @@ def draw_precession_cycle(years):
     ax.text((c / 2) + offset_text, 0.0, "Perihelion", fontsize=10, fontweight='bold', ha='left')
     ax.text(-a - offset_text, 0.0, "Aphelion", fontsize=10, fontweight='bold', ha='right')
 
-    reverse_season = (years == 23000)
+    reverse_season = (years == 13000)
 
     def draw_earth_with_axis(pos, is_aphelion):
         earth = plt.Circle(pos, 0.25, color='skyblue', zorder=3)
@@ -180,14 +180,14 @@ elif main_menu == "External Factors":
             unsafe_allow_html=True
         )
 
-        years = st.select_slider("Precession Cycle Position (years)", options=[0, 23000, 46000], value=0)
+        years = st.select_slider("Precession Cycle Position (years)", options=[0, 13000, 26000], value=0)
 
         st.markdown(
             """
             <div style="display: flex; justify-content: space-between; font-size: 12px; color: gray; margin-top:-10px;">
                 <span>0</span>
-                <span style="color:red; font-weight:bold;">23,000 ▼</span>
-                <span>46,000</span>
+                <span style="color:red; font-weight:bold;">13,000 ▲</span>
+                <span>26,000</span>
             </div>
             """,
             unsafe_allow_html=True
